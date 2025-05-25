@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link, useLocation } from 'react-router-dom';
 import { FiShoppingCart, FiHeart, FiUser, FiSearch, FiMenu, FiX } from 'react-icons/fi';
-import Button from '../common/Button';
 
 const HeaderContainer = styled.header`
   background-color: ${props => props.theme.colors.background};

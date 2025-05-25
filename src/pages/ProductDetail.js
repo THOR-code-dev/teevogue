@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useParams, Link } from 'react-router-dom';
-import { FiHeart, FiShoppingCart, FiShare2, FiChevronRight, FiStar } from 'react-icons/fi';
+import { FiHeart, FiShoppingCart, FiShare2, FiStar } from 'react-icons/fi';
 import Button from '../components/common/Button';
 
 // Styled Components
@@ -323,7 +323,7 @@ const mockProduct = {
 };
 
 const ProductDetail = () => {
-  const { id } = useParams();
+  useParams(); // Şu an kullanmıyoruz ama ileride id parametresini kullanacağız
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState(mockProduct.colors[0].name);
   const [selectedSize, setSelectedSize] = useState(mockProduct.sizes[0].name);
