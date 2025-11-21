@@ -428,7 +428,7 @@ const Home = () => {
         <CategoryGrid>
           {categories.map(category => (
             <CategoryCard key={category.id}>
-              <Link to={`/category/${category.id}`}>
+              <Link to={`/${category.id}`}>
                 <img src={category.image} alt={category.name} />
                 <CategoryOverlay>
                   <h3>{category.name}</h3>

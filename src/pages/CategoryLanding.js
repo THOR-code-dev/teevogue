@@ -3,7 +3,8 @@ import { Navigate, Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import Button from '../components/common/Button';
 import categoryMeta from '../constants/categoryMeta';
-import products from '../data/products';
+import ProductCard from '../components/product/ProductCard';
+import useProducts from '../hooks/useProducts';
 
 const Page = styled.section`
   display: flex;
@@ -139,14 +140,13 @@ const Price = styled.span`
 const CategoryLanding = () => {
   const { gender } = useParams();
   const meta = categoryMeta[gender];
+  const { products: allProducts, loading } = useProducts({ gender });
 
   if (!meta) {
     return <Navigate to="/" replace />;
   }
 
-  const featuredProducts = products
-    .filter(product => product.gender === gender)
-    .slice(0, 4);
+  const featuredProducts = allProducts.slice(0, 4);
 
   return (
     <Page>
@@ -157,7 +157,7 @@ const CategoryLanding = () => {
           </p>
           <h1>{meta.hero.title}</h1>
           <p style={{ maxWidth: 420 }}>{meta.hero.subtitle}</p>
-          <Button as={Link} to={`/products`} variant="secondary" size="large">
+          <Button as={Link} to={gender ? `/${gender}` : `/products`} variant="secondary" size="large">
             Koleksiyonu Gör
           </Button>
           <PillRow>
@@ -173,7 +173,7 @@ const CategoryLanding = () => {
       <div>
         <SectionHeading>
           <Title>Koleksiyonu Keşfet</Title>
-          <Button as={Link} to={`/${gender}/alt-giyim`} variant="outline">
+          <Button as={Link} to={gender ? `/${gender}` : `/products`} variant="outline">
             Tümünü Gör
           </Button>
         </SectionHeading>
@@ -190,21 +190,27 @@ const CategoryLanding = () => {
       <div>
         <SectionHeading>
           <Title>Öne Çıkanlar</Title>
-          <span>{featuredProducts.length} ürün seçildi</span>
+          <span>{loading ? 'Yükleniyor...' : `${allProducts.length} ürün`}</span>
         </SectionHeading>
         <HighlightGrid>
-          {featuredProducts.map(product => (
-            <HighlightCard key={product.id} to={`/product/${product.id}`}>
-              <HighlightImage>
-                <img src={product.heroImage} alt={product.title} />
-              </HighlightImage>
-              <HighlightBody>
-                <small>{meta.label}</small>
-                <strong>{product.title}</strong>
-                <Price>{product.price.toLocaleString('tr-TR')} ₺</Price>
-              </HighlightBody>
-            </HighlightCard>
-          ))}
+          {loading ? (
+            <p>Yükleniyor...</p>
+          ) : allProducts.length > 0 ? (
+            allProducts.map(product => (
+              <HighlightCard key={product.id} to={`/product/${product.id}`}>
+                <HighlightImage>
+                  <img src={product.heroImage} alt={product.title} />
+                </HighlightImage>
+                <HighlightBody>
+                  <small>{meta.label}</small>
+                  <strong>{product.title}</strong>
+                  <Price>{product.price.toLocaleString('tr-TR')} ₺</Price>
+                </HighlightBody>
+              </HighlightCard>
+            ))
+          ) : (
+            <p>Bu kategoride ürün bulunmuyor.</p>
+          )}
         </HighlightGrid>
       </div>
     </Page>
