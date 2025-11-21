@@ -28,20 +28,6 @@ const normalizeProduct = (product) => ({
   tags: product.tags || [],
 });
 
-const seedProductsIfEmpty = async () => {
-  const { data, error } = await supabase.from('products').select('id').limit(1);
-  if (error) throw error;
-  if (data.length) return;
-
-  const payload = baseProducts.map((product) => ({
-    ...product,
-    created_at: new Date().toISOString(),
-  }));
-
-  const { error: insertError } = await supabase.from('products').upsert(payload, { onConflict: 'id' });
-  if (insertError) throw insertError;
-};
-
 export const getProducts = async () => {
   // await seedProductsIfEmpty(); // Seed disabled to avoid mock data
   const { data, error } = await supabase
