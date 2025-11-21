@@ -1,4 +1,3 @@
-import baseProducts from '../data/products';
 import supabase from './supabaseClient';
 
 const listeners = new Set();
