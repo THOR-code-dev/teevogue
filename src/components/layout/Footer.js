@@ -166,9 +166,9 @@ const Footer = () => {
       <FooterContent>
         <FooterGrid>
           <FooterSection>
-            <FooterTitle>TeeVogue</FooterTitle>
-            <p style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '1rem' }}>
-              Özel tasarım t-shirtler için doğru adres. Kaliteli kumaş ve baskılarla tarzınızı yansıtın.
+            <FooterTitle>Becca Giyim</FooterTitle>
+            <p style={{ color: 'rgba(255, 255, 255, 0.85)', marginBottom: '1rem' }}>
+              Kadın ve erkek koleksiyonlarında modern siluetler, sürdürülebilir materyaller ve zamansız tasarımlar.
             </p>
             <SocialIcons>
               <SocialIcon href="https://facebook.com" target="_blank" aria-label="Facebook">
@@ -230,8 +230,8 @@ const Footer = () => {
           
           <FooterSection>
             <FooterTitle>Bülten</FooterTitle>
-            <p style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '1rem' }}>
-              Yeni ürünler ve kampanyalardan haberdar olmak için bültenimize abone olun.
+            <p style={{ color: 'rgba(255, 255, 255, 0.85)', marginBottom: '1rem' }}>
+              Drop koleksiyonları, styling önerileri ve özel kampanyalara ilk siz erişin.
             </p>
             <Newsletter>
               <NewsletterForm onSubmit={handleNewsletterSubmit}>
@@ -250,7 +250,7 @@ const Footer = () => {
         
         <BottomFooter>
           <Copyright>
-            &copy; {new Date().getFullYear()} TeeVogue. Tüm hakları saklıdır.
+            &copy; {new Date().getFullYear()} Becca Giyim. Tüm hakları saklıdır.
           </Copyright>
           <PaymentMethods>
             <PaymentIcon src="https://cdn-icons-png.flaticon.com/512/196/196578.png" alt="Visa" />

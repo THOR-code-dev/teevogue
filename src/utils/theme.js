@@ -2,30 +2,36 @@
 const theme = {
   colors: {
     // Ana renkler
-    primary: '#3F51B5',      // Koyu mavi - ana marka rengi
-    secondary: '#FF4081',    // Pembe - vurgu rengi
-    accent: '#00BCD4',       // Turkuaz - ikincil vurgu
+    primary: '#0F172A',      // Gece mavisi - ana marka rengi
+    secondary: '#C4733C',    // Bakır - vurgu rengi
+    accent: '#E4C7A5',       // Sıcak ton - ikincil vurgu
     
     // Nötr renkler
-    background: '#FFFFFF',   // Beyaz - arka plan
-    surface: '#F5F5F5',      // Açık gri - kart arka planı
+    background: '#F5F5F5',   // Açık gri arka plan
+    surface: '#FFFFFF',      // Kart arka planı
+    muted: '#E6E6E6',
     text: {
-      primary: '#212121',    // Koyu gri - ana metin
-      secondary: '#757575',  // Orta gri - ikincil metin
-      disabled: '#BDBDBD',   // Açık gri - devre dışı metin
+      primary: '#1E1E1E',    // Koyu gri - ana metin
+      secondary: '#5F6368',  // Orta gri - ikincil metin
+      disabled: '#B0B5C0',   // Açık gri - devre dışı metin
     },
     
     // Durum renkleri
-    success: '#4CAF50',      // Yeşil - başarı
-    error: '#F44336',        // Kırmızı - hata
-    warning: '#FFC107',      // Sarı - uyarı
-    info: '#2196F3',         // Mavi - bilgi
+    success: '#3FA996',      // Yeşil-mavi - başarı
+    error: '#E14949',        // Kırmızı - hata
+    warning: '#F5B248',      // Amber - uyarı
+    info: '#4E7DF2',         // Mavi - bilgi
+    
+    gradients: {
+      hero: 'linear-gradient(135deg, #0F172A 0%, #1E2A44 45%, #C4733C 100%)',
+      card: 'linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(196,115,60,0.08) 100%)'
+    }
   },
   
   typography: {
     fontFamily: {
-      heading: "'Montserrat', sans-serif",  // Başlık fontu
-      body: "'Open Sans', sans-serif",      // Metin fontu
+      heading: "'Playfair Display', serif",  // Başlık fontu
+      body: "'Inter', sans-serif",           // Metin fontu
     },
     fontSize: {
       xs: '0.75rem',    // 12px
@@ -33,8 +39,8 @@ const theme = {
       md: '1rem',       // 16px
       lg: '1.25rem',    // 20px
       xl: '1.5rem',     // 24px
-      xxl: '2rem',      // 32px
-      xxxl: '2.5rem',   // 40px
+      xxl: '2.25rem',   // 36px
+      xxxl: '3.25rem',  // 52px
     },
     fontWeight: {
       light: 300,
@@ -42,7 +48,13 @@ const theme = {
       medium: 500,
       semiBold: 600,
       bold: 700,
+      black: 800,
     },
+    letterSpacing: {
+      tight: '-0.02em',
+      normal: '0',
+      wide: '0.08em'
+    }
   },
   
   spacing: {

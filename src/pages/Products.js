@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { FiFilter, FiX, FiChevronDown, FiChevronUp, FiGrid, FiList } from 'react-icons/fi';
+import { useParams } from 'react-router-dom';
 import ProductCard from '../components/product/ProductCard';
 import Button from '../components/common/Button';
 import Checkbox from '../components/common/Checkbox';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
+import useProducts from '../hooks/useProducts';
+import { useCart } from '../contexts/CartContext';
+import categoryMeta from '../constants/categoryMeta';
 
 // Styled Components
 const PageHeader = styled.div`
@@ -345,23 +349,29 @@ const PageButton = styled.button`
   }
 `;
 
-// Örnek ürün verileri
-const mockProducts = Array.from({ length: 12 }).map((_, index) => ({
-  id: index + 1,
-  title: `T-Shirt Model ${index + 1}`,
-  category: index % 3 === 0 ? 'Erkek' : index % 3 === 1 ? 'Kadın' : 'Unisex',
-  price: 149.99 + (index * 10),
-  oldPrice: index % 2 === 0 ? 199.99 + (index * 10) : null,
-  discount: index % 2 === 0 ? 25 : null,
-  image: `https://picsum.photos/500/500?random=${index}`,
-  isWishlisted: index % 5 === 0,
-  description: 'Yüksek kaliteli pamuklu kumaştan üretilmiş, rahat ve şık tasarımlı t-shirt. Günlük kullanım için ideal.',
-  colors: ['black', 'white', 'gray', 'blue', 'red'].slice(0, (index % 3) + 2),
-  sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'].slice(0, (index % 4) + 3)
-}));
+const sortProductList = (list, sortBy) => {
+  switch (sortBy) {
+    case 'newest':
+      return [...list].reverse();
+    case 'price-low':
+      return [...list].sort((a, b) => a.price - b.price);
+    case 'price-high':
+      return [...list].sort((a, b) => b.price - a.price);
+    case 'name-asc':
+      return [...list].sort((a, b) => a.title.localeCompare(b.title));
+    case 'name-desc':
+      return [...list].sort((a, b) => b.title.localeCompare(a.title));
+    default:
+      return list;
+  }
+};
 
 const Products = () => {
-  // State tanımlamaları
+  const { gender, subcategory } = useParams();
+  const genderMeta = gender ? categoryMeta[gender] : null;
+  const { addItem } = useCart();
+  const { products: baseProducts, filters, loading, error } = useProducts({ gender, category: subcategory });
+
   const [view, setView] = useState('grid');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openFilters, setOpenFilters] = useState({
@@ -370,33 +380,38 @@ const Products = () => {
     colors: true,
     sizes: true
   });
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(subcategory ? [subcategory] : []);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sortBy, setSortBy] = useState('featured');
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // Filtre bölümlerini açıp kapatma
+
+  useEffect(() => {
+    setCurrentPage(1);
+    if (subcategory) {
+      setSelectedCategories([subcategory]);
+    } else {
+      setSelectedCategories([]);
+    }
+  }, [subcategory, gender]);
+
   const toggleFilter = (filter) => {
     setOpenFilters(prev => ({
       ...prev,
       [filter]: !prev[filter]
     }));
   };
-  
-  // Kategori seçimi
+
   const handleCategoryChange = (category) => {
     setSelectedCategories(prev => {
       if (prev.includes(category)) {
         return prev.filter(cat => cat !== category);
-      } else {
-        return [...prev, category];
       }
+      return [...prev, category];
     });
   };
-  
-  // Fiyat aralığı değişimi
+
   const handlePriceChange = (e) => {
     const { name, value } = e.target;
     setPriceRange(prev => ({
@@ -404,59 +419,121 @@ const Products = () => {
       [name]: value
     }));
   };
-  
-  // Renk seçimi
+
   const handleColorSelect = (color) => {
     setSelectedColors(prev => {
       if (prev.includes(color)) {
         return prev.filter(c => c !== color);
-      } else {
-        return [...prev, color];
       }
+      return [...prev, color];
     });
   };
-  
-  // Beden seçimi
+
   const handleSizeSelect = (size) => {
     setSelectedSizes(prev => {
       if (prev.includes(size)) {
         return prev.filter(s => s !== size);
-      } else {
-        return [...prev, size];
       }
+      return [...prev, size];
     });
   };
-  
-  // Sıralama değişimi
+
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
   };
-  
-  // Filtreleri temizleme
+
   const clearFilters = () => {
-    setSelectedCategories([]);
+    setSelectedCategories(subcategory ? [subcategory] : []);
     setPriceRange({ min: '', max: '' });
     setSelectedColors([]);
     setSelectedSizes([]);
   };
-  
-  // Sayfa değiştirme
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo(0, 0);
   };
-  
+
+  const getCategoryLabel = (product) => {
+    const meta = categoryMeta[product.gender];
+    const sub = meta?.subcategories?.find(item => item.slug === product.category);
+    return sub ? `${meta.label} · ${sub.label}` : meta?.label || product.category;
+  };
+
+  const filteredProducts = useMemo(() => {
+    let list = [...baseProducts];
+
+    if (selectedCategories.length) {
+      list = list.filter(product => selectedCategories.includes(product.category));
+    }
+
+    if (selectedColors.length) {
+      list = list.filter(product => (product.colors || []).some(color => selectedColors.includes(color.name)));
+    }
+
+    if (selectedSizes.length) {
+      list = list.filter(product => (product.sizes || []).some(size => selectedSizes.includes(size)));
+    }
+
+    if (priceRange.min) {
+      list = list.filter(product => product.price >= Number(priceRange.min));
+    }
+
+    if (priceRange.max) {
+      list = list.filter(product => product.price <= Number(priceRange.max));
+    }
+
+    return sortProductList(list, sortBy);
+  }, [baseProducts, selectedCategories, selectedColors, selectedSizes, priceRange, sortBy]);
+
+  const pageSize = view === 'grid' ? 12 : 6;
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const handleAddToCart = (product) => {
+    addItem(product, {
+      size: product.sizes?.[0] || null,
+      color: product.colors?.[0]?.name || null,
+      quantity: 1
+    });
+  };
+
+  const categoryOptions = genderMeta
+    ? genderMeta.subcategories
+    : filters.categories.map(slug => ({ slug, label: slug }));
+
+  const pageTitle = genderMeta ? genderMeta.hero.title : 'Ürünlerimiz';
+  const pageDescription = subcategory
+    ? genderMeta?.subcategories?.find(sub => sub.slug === subcategory)?.description
+      || 'Becca Giyim koleksiyonlarını keşfedin.'
+    : genderMeta?.hero.subtitle || 'Özel tasarım koleksiyonlarımızı keşfedin.';
+
+  if (loading) {
+    return <p>Ürünler yükleniyor...</p>;
+  }
+
+  if (error) {
+    return <p>Ürünler yüklenirken bir hata oluştu.</p>;
+  }
+
   return (
     <>
       <PageHeader>
-        <PageTitle>Ürünlerimiz</PageTitle>
-        <PageDescription>
-          Özel tasarım t-shirtlerimiz arasından size en uygun olanı seçin. Tüm ürünlerimiz %100 pamuklu kumaştan üretilmiştir.
-        </PageDescription>
+        <PageTitle>{pageTitle}</PageTitle>
+        <PageDescription>{pageDescription}</PageDescription>
       </PageHeader>
       
       <ProductsHeader>
-        <ProductCount>{mockProducts.length} ürün bulundu</ProductCount>
+        <ProductCount>{filteredProducts.length} ürün bulundu</ProductCount>
         
         <SortingOptions>
           <MobileFilterButton onClick={() => setIsFilterOpen(true)}>
@@ -497,7 +574,6 @@ const Products = () => {
       </ProductsHeader>
       
       <ProductsContainer>
-        {/* Filtreler Sidebar */}
         <Sidebar isFilterOpen={isFilterOpen}>
           <MobileFilterHeader>
             <h3>Filtreler</h3>
@@ -506,7 +582,6 @@ const Products = () => {
             </CloseFilterButton>
           </MobileFilterHeader>
           
-          {/* Kategoriler Filtresi */}
           <FilterSection>
             <FilterHeader onClick={() => toggleFilter('categories')}>
               <FilterTitle>Kategoriler</FilterTitle>
@@ -514,26 +589,18 @@ const Products = () => {
             </FilterHeader>
             <FilterContent isOpen={openFilters.categories}>
               <CheckboxGroup>
-                <Checkbox
-                  label="Erkek"
-                  checked={selectedCategories.includes('Erkek')}
-                  onChange={() => handleCategoryChange('Erkek')}
-                />
-                <Checkbox
-                  label="Kadın"
-                  checked={selectedCategories.includes('Kadın')}
-                  onChange={() => handleCategoryChange('Kadın')}
-                />
-                <Checkbox
-                  label="Unisex"
-                  checked={selectedCategories.includes('Unisex')}
-                  onChange={() => handleCategoryChange('Unisex')}
-                />
+                {categoryOptions.map(option => (
+                  <Checkbox
+                    key={option.slug}
+                    label={option.label}
+                    checked={selectedCategories.includes(option.slug)}
+                    onChange={() => handleCategoryChange(option.slug)}
+                  />
+                ))}
               </CheckboxGroup>
             </FilterContent>
           </FilterSection>
           
-          {/* Fiyat Filtresi */}
           <FilterSection>
             <FilterHeader onClick={() => toggleFilter('price')}>
               <FilterTitle>Fiyat Aralığı</FilterTitle>
@@ -561,7 +628,6 @@ const Products = () => {
             </FilterContent>
           </FilterSection>
           
-          {/* Renk Filtresi */}
           <FilterSection>
             <FilterHeader onClick={() => toggleFilter('colors')}>
               <FilterTitle>Renkler</FilterTitle>
@@ -569,42 +635,20 @@ const Products = () => {
             </FilterHeader>
             <FilterContent isOpen={openFilters.colors}>
               <div>
-                <ColorOption 
-                  color="black" 
-                  isSelected={selectedColors.includes('black')}
-                  onClick={() => handleColorSelect('black')}
-                />
-                <ColorOption 
-                  color="white" 
-                  isSelected={selectedColors.includes('white')}
-                  onClick={() => handleColorSelect('white')}
-                  style={{ border: '1px solid #ddd' }}
-                />
-                <ColorOption 
-                  color="gray" 
-                  isSelected={selectedColors.includes('gray')}
-                  onClick={() => handleColorSelect('gray')}
-                />
-                <ColorOption 
-                  color="red" 
-                  isSelected={selectedColors.includes('red')}
-                  onClick={() => handleColorSelect('red')}
-                />
-                <ColorOption 
-                  color="blue" 
-                  isSelected={selectedColors.includes('blue')}
-                  onClick={() => handleColorSelect('blue')}
-                />
-                <ColorOption 
-                  color="green" 
-                  isSelected={selectedColors.includes('green')}
-                  onClick={() => handleColorSelect('green')}
-                />
+                {filters.colors.map(color => (
+                  <ColorOption
+                    key={color.name}
+                    color={color.code}
+                    isSelected={selectedColors.includes(color.name)}
+                    onClick={() => handleColorSelect(color.name)}
+                    style={color.name.toLowerCase() === 'beyaz' ? { border: '1px solid #ddd' } : undefined}
+                    title={color.name}
+                  />
+                ))}
               </div>
             </FilterContent>
           </FilterSection>
           
-          {/* Beden Filtresi */}
           <FilterSection>
             <FilterHeader onClick={() => toggleFilter('sizes')}>
               <FilterTitle>Bedenler</FilterTitle>
@@ -612,42 +656,15 @@ const Products = () => {
             </FilterHeader>
             <FilterContent isOpen={openFilters.sizes}>
               <div>
-                <SizeOption 
-                  isSelected={selectedSizes.includes('XS')}
-                  onClick={() => handleSizeSelect('XS')}
-                >
-                  XS
-                </SizeOption>
-                <SizeOption 
-                  isSelected={selectedSizes.includes('S')}
-                  onClick={() => handleSizeSelect('S')}
-                >
-                  S
-                </SizeOption>
-                <SizeOption 
-                  isSelected={selectedSizes.includes('M')}
-                  onClick={() => handleSizeSelect('M')}
-                >
-                  M
-                </SizeOption>
-                <SizeOption 
-                  isSelected={selectedSizes.includes('L')}
-                  onClick={() => handleSizeSelect('L')}
-                >
-                  L
-                </SizeOption>
-                <SizeOption 
-                  isSelected={selectedSizes.includes('XL')}
-                  onClick={() => handleSizeSelect('XL')}
-                >
-                  XL
-                </SizeOption>
-                <SizeOption 
-                  isSelected={selectedSizes.includes('XXL')}
-                  onClick={() => handleSizeSelect('XXL')}
-                >
-                  XXL
-                </SizeOption>
+                {filters.sizes.map(size => (
+                  <SizeOption
+                    key={size}
+                    isSelected={selectedSizes.includes(size)}
+                    onClick={() => handleSizeSelect(size)}
+                  >
+                    {size}
+                  </SizeOption>
+                ))}
               </div>
             </FilterContent>
           </FilterSection>
@@ -661,71 +678,78 @@ const Products = () => {
           </Button>
         </Sidebar>
         
-        {/* Ürünler */}
         <ProductsContent>
           {view === 'grid' ? (
             <ProductGrid>
-              {mockProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
+              {paginatedProducts.map(product => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  onAddToCart={handleAddToCart}
+                />
               ))}
             </ProductGrid>
           ) : (
             <ProductList>
-              {mockProducts.map(product => (
-                <ProductListItem key={product.id}>
-                  <ProductImage>
-                    <img src={product.image} alt={product.title} />
-                  </ProductImage>
-                  <ProductDetails>
-                    <ProductCategory>{product.category}</ProductCategory>
-                    <ProductTitle>{product.title}</ProductTitle>
-                    <ProductDescription>{product.description}</ProductDescription>
-                    
-                    <PriceContainer>
-                      <Price>{product.price.toLocaleString('tr-TR')} ₺</Price>
-                      {product.oldPrice && (
-                        <OldPrice>{product.oldPrice.toLocaleString('tr-TR')} ₺</OldPrice>
-                      )}
-                    </PriceContainer>
-                    
-                    <Button 
-                      variant="primary"
-                      onClick={() => alert(`${product.title} sepete eklendi!`)}
-                    >
-                      Sepete Ekle
-                    </Button>
-                  </ProductDetails>
-                </ProductListItem>
-              ))}
+              {paginatedProducts.map(product => {
+                const imageSrc = product.heroImage || product.image;
+                return (
+                  <ProductListItem key={product.id}>
+                    <ProductImage>
+                      <img src={imageSrc} alt={product.title} />
+                    </ProductImage>
+                    <ProductDetails>
+                      <ProductCategory>{getCategoryLabel(product)}</ProductCategory>
+                      <ProductTitle>{product.title}</ProductTitle>
+                      <ProductDescription>{product.description}</ProductDescription>
+                      
+                      <PriceContainer>
+                        <Price>{product.price.toLocaleString('tr-TR')} ₺</Price>
+                        {product.oldPrice && (
+                          <OldPrice>{product.oldPrice.toLocaleString('tr-TR')} ₺</OldPrice>
+                        )}
+                      </PriceContainer>
+                      
+                      <Button 
+                        variant="primary"
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        Sepete Ekle
+                      </Button>
+                    </ProductDetails>
+                  </ProductListItem>
+                );
+              })}
             </ProductList>
           )}
           
-          {/* Sayfalama */}
-          <Pagination>
-            <PageButton 
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              &lt;
-            </PageButton>
-            
-            {[1, 2, 3].map(page => (
+          {totalPages > 1 && (
+            <Pagination>
               <PageButton 
-                key={page}
-                active={currentPage === page}
-                onClick={() => handlePageChange(page)}
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
               >
-                {page}
+                &lt;
               </PageButton>
-            ))}
-            
-            <PageButton 
-              disabled={currentPage === 3}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              &gt;
-            </PageButton>
-          </Pagination>
+              
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <PageButton 
+                  key={index + 1}
+                  active={currentPage === index + 1}
+                  onClick={() => handlePageChange(index + 1)}
+                >
+                  {index + 1}
+                </PageButton>
+              ))}
+              
+              <PageButton 
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
+                &gt;
+              </PageButton>
+            </Pagination>
+          )}
         </ProductsContent>
       </ProductsContainer>
     </>

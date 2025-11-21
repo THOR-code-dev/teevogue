@@ -67,7 +67,10 @@ const StyledButton = styled.button`
   font-family: ${props => props.theme.typography.fontFamily.body};
   font-weight: ${props => props.theme.typography.fontWeight.medium};
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
   
   /* Varyant stilleri */
   ${props => buttonVariants[props.variant || 'primary']}
@@ -94,6 +97,37 @@ const StyledButton = styled.button`
   ${props => props.hasIcon && css`
     gap: ${props => props.theme.spacing.xs};
   `}
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 12px 30px rgba(0, 0, 0, 0.15),
+      0 0 0 3px ${props => props.theme.colors.primary}44;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, transparent 60%);
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  &:hover::after {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 `;
 
 // Button komponenti

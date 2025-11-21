@@ -4,27 +4,38 @@ import { ThemeProvider } from 'styled-components';
 import theme from './utils/theme';
 import GlobalStyles from './utils/globalStyles';
 import Layout from './components/layout/Layout';
+import { CartProvider } from './contexts/CartContext';
 
 // Sayfalar
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
+import CategoryLanding from './pages/CategoryLanding';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import ProductCreate from './pages/ProductCreate';
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles />
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/category/:categoryId" element={<Products />} />
-            <Route path="*" element={<div>Sayfa Bulunamadı</div>} />
-          </Routes>
-        </Layout>
-      </Router>
+      <CartProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/:gender" element={<CategoryLanding />} />
+              <Route path="/:gender/:subcategory" element={<Products />} />
+              <Route path="/admin/urun-ekle" element={<ProductCreate />} />
+              <Route path="*" element={<div>Sayfa Bulunamadı</div>} />
+            </Routes>
+          </Layout>
+        </Router>
+      </CartProvider>
     </ThemeProvider>
   );
 }

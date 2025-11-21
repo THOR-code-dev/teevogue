@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
 import ProductCard from '../components/product/ProductCard';
 import Button from '../components/common/Button';
+import categoryMeta from '../constants/categoryMeta';
+import products from '../data/products';
 
 // Styled Components
 const HeroSection = styled.section`
@@ -13,8 +15,20 @@ const HeroSection = styled.section`
   text-align: center;
   padding: ${props => props.theme.spacing.xxl} 0;
   margin-bottom: ${props => props.theme.spacing.xl};
-  background-color: ${props => props.theme.colors.primary}11;
+  background: ${props => props.theme.colors.gradients.hero};
   border-radius: ${props => props.theme.borderRadius.lg};
+  color: white;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 12%;
+    background: radial-gradient(circle at top, rgba(228, 199, 165, 0.65), transparent 55%);
+    z-index: -1;
+  }
   
   @media (min-width: ${props => props.theme.breakpoints.tablet}) {
     flex-direction: row;
@@ -35,13 +49,13 @@ const HeroContent = styled.div`
 const HeroTitle = styled.h1`
   font-size: ${props => props.theme.typography.fontSize.xxxl};
   margin-bottom: ${props => props.theme.spacing.md};
-  color: ${props => props.theme.colors.primary};
+  color: white;
 `;
 
 const HeroSubtitle = styled.p`
   font-size: ${props => props.theme.typography.fontSize.lg};
   margin-bottom: ${props => props.theme.spacing.lg};
-  color: ${props => props.theme.colors.text.secondary};
+  color: rgba(255, 255, 255, 0.75);
 `;
 
 const HeroImage = styled.div`
@@ -49,12 +63,13 @@ const HeroImage = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
   
   img {
     max-width: 100%;
     height: auto;
-    border-radius: ${props => props.theme.borderRadius.md};
-    box-shadow: ${props => props.theme.shadows.md};
+    border-radius: ${props => props.theme.borderRadius.lg};
+    box-shadow: ${props => props.theme.shadows.lg};
   }
 `;
 
@@ -118,7 +133,7 @@ const CategorySection = styled.section`
 
 const CategoryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: ${props => props.theme.spacing.md};
 `;
 
@@ -153,12 +168,18 @@ const CategoryOverlay = styled.div`
   left: 0;
   right: 0;
   padding: ${props => props.theme.spacing.md};
-  background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
+  background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0.05));
   
   h3 {
     color: white;
-    margin: 0;
+    margin: 0 0 ${props => props.theme.spacing.xs} 0;
     font-size: ${props => props.theme.typography.fontSize.lg};
+  }
+
+  p {
+    margin: 0;
+    color: rgba(255,255,255,0.75);
+    font-size: ${props => props.theme.typography.fontSize.sm};
   }
 `;
 
@@ -290,53 +311,37 @@ const NewsletterButton = styled.button`
 `;
 
 // Örnek ürün verileri
-const featuredProducts = [
-  {
-    id: 1,
-    title: 'Vintage Baskılı T-Shirt',
-    category: 'Erkek',
-    price: 199.99,
-    oldPrice: 249.99,
-    discount: 20,
-    image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
-    isWishlisted: false
-  },
-  {
-    id: 2,
-    title: 'Minimalist Tasarım T-Shirt',
-    category: 'Kadın',
-    price: 179.99,
-    image: 'https://images.unsplash.com/photo-1503342394128-c104d54dba01?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
-    isWishlisted: true
-  },
-  {
-    id: 3,
-    title: 'Grafik Baskılı Oversize T-Shirt',
-    category: 'Unisex',
-    price: 229.99,
-    oldPrice: 299.99,
-    discount: 23,
-    image: 'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
-    isWishlisted: false
-  },
-  {
-    id: 4,
-    title: 'Retro Baskılı T-Shirt',
-    category: 'Erkek',
-    price: 189.99,
-    oldPrice: 239.99,
-    discount: 21,
-    image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
-    isWishlisted: false
-  }
-];
+const featuredProducts = products.slice(0, 4);
 
-// Örnek kategori verileri
 const categories = [
-  { id: 1, name: 'Erkek', image: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80' },
-  { id: 2, name: 'Kadın', image: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80' },
-  { id: 3, name: 'Unisex', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80' },
-  { id: 4, name: 'Oversize', image: 'https://images.unsplash.com/photo-1551232864-3f0890e580d9?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80' }
+  {
+    id: 'kadin',
+    name: 'Kadın Koleksiyonu',
+    tagline: 'Takım, dış giyim ve üst giyim kapsülleri',
+    image: categoryMeta.kadin.hero.image,
+    to: '/kadin'
+  },
+  {
+    id: 'erkek',
+    name: 'Erkek Koleksiyonu',
+    tagline: 'Şehir silüetinden ilham alan parçalar',
+    image: categoryMeta.erkek.hero.image,
+    to: '/erkek'
+  },
+  {
+    id: 'kadin-takim',
+    name: 'Kadın Takım',
+    tagline: 'Ofisten akşam davetine',
+    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80',
+    to: '/kadin/takim'
+  },
+  {
+    id: 'erkek-dis',
+    name: 'Erkek Dış Giyim',
+    tagline: 'Teknik kaban ve ceketler',
+    image: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
+    to: '/erkek/dis-giyim'
+  }
 ];
 
 // Örnek müşteri yorumları

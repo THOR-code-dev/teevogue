@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { FiHeart, FiShoppingCart } from 'react-icons/fi';
 import Button from '../common/Button';
+import categoryMeta from '../../constants/categoryMeta';
 
 const Card = styled.div`
   display: flex;
@@ -138,15 +139,28 @@ const ProductCard = ({
     id: 1,
     title: 'Ürün Adı',
     category: 'Kategori',
+    gender: 'kadin',
     price: 199.99,
     oldPrice: 249.99,
     discount: 20,
     image: 'https://via.placeholder.com/300',
+    heroImage: '',
     isWishlisted: false
   },
   onAddToCart,
   onToggleWishlist
 }) => {
+  const displayImage = product.image || product.heroImage;
+
+  const getCategoryLabel = () => {
+    const genderMeta = categoryMeta[product.gender];
+    const subcategory = genderMeta?.subcategories?.find(sub => sub.slug === product.category);
+    if (genderMeta && subcategory) {
+      return `${genderMeta.label} · ${subcategory.label}`;
+    }
+    return subcategory?.label || genderMeta?.label || product.category;
+  };
+
   const handleAddToCart = () => {
     if (onAddToCart) onAddToCart(product);
   };
@@ -159,7 +173,7 @@ const ProductCard = ({
   return (
     <Card>
       <ImageContainer className="product-image">
-        <img src={product.image} alt={product.title} />
+        <img src={displayImage} alt={product.title} />
         <WishlistButton 
           onClick={handleToggleWishlist} 
           isWishlisted={product.isWishlisted}
@@ -173,7 +187,7 @@ const ProductCard = ({
       </ImageContainer>
       
       <Content>
-        <Category>{product.category}</Category>
+        <Category>{getCategoryLabel()}</Category>
         <Title>{product.title}</Title>
         
         <PriceContainer>

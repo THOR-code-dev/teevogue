@@ -2,7 +2,7 @@ import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`
   /* Google Fonts import */
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
   * {
     box-sizing: border-box;
@@ -15,15 +15,22 @@ const GlobalStyles = createGlobalStyle`
   }
 
   body {
+    margin: 0;
     font-family: ${props => props.theme.typography.fontFamily.body};
-    color: ${props => props.theme.colors.text.primary};
     background-color: ${props => props.theme.colors.background};
+    color: ${props => props.theme.colors.text.primary};
+    &.modal-open {
+      overflow: hidden;
+    }
     line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: ${props => props.theme.typography.fontFamily.heading};
-    font-weight: ${props => props.theme.typography.fontWeight.semiBold};
+    font-weight: ${props => props.theme.typography.fontWeight.medium};
+    letter-spacing: ${props => props.theme.typography.letterSpacing.tight};
     margin-bottom: ${props => props.theme.spacing.md};
   }
 

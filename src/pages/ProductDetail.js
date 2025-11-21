@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { useParams, Link } from 'react-router-dom';
 import { FiHeart, FiShoppingCart, FiShare2, FiStar } from 'react-icons/fi';
 import Button from '../components/common/Button';
+import { getProductById } from '../services/productService';
+import { useCart } from '../contexts/CartContext';
+import categoryMeta from '../constants/categoryMeta';
 
 // Styled Components
 const BreadcrumbNav = styled.nav`
@@ -287,50 +290,85 @@ const ProductMeta = styled.div`
   }
 `;
 
-// Örnek ürün verisi
-const mockProduct = {
-  id: 1,
-  title: 'Vintage Baskılı T-Shirt',
-  category: 'Erkek',
-  price: 199.99,
-  oldPrice: 249.99,
-  discount: 20,
-  rating: 4.5,
-  reviewCount: 12,
-  description: 'Yüksek kaliteli %100 pamuklu kumaştan üretilmiş vintage baskılı t-shirt. Rahat kesimi ve dayanıklı baskısı ile uzun süre kullanım sağlar. Günlük kombinlerinize şık bir hava katmak için ideal.',
-  images: [
-    'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
-    'https://images.unsplash.com/photo-1576566588028-4147f3842f27?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80',
-    'https://images.unsplash.com/photo-1562157873-818bc0726f68?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80'
-  ],
-  colors: [
-    { name: 'Siyah', code: '#000000', available: true },
-    { name: 'Beyaz', code: '#FFFFFF', available: true },
-    { name: 'Gri', code: '#808080', available: true },
-    { name: 'Mavi', code: '#0000FF', available: false }
-  ],
-  sizes: [
-    { name: 'S', available: true },
-    { name: 'M', available: true },
-    { name: 'L', available: true },
-    { name: 'XL', available: true },
-    { name: 'XXL', available: false }
-  ],
-  sku: 'TS-VB-001',
-  inStock: true,
-  tags: ['vintage', 't-shirt', 'erkek']
-};
-
 const ProductDetail = () => {
-  useParams(); // Şu an kullanmıyoruz ama ileride id parametresini kullanacağız
+  const { id } = useParams();
+  const { addItem } = useCart();
+  const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(mockProduct.colors[0].name);
-  const [selectedSize, setSelectedSize] = useState(mockProduct.sizes[0].name);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await getProductById(id);
+        if (mounted) {
+          setProduct(data || null);
+          if (data?.colors?.length) {
+            setSelectedColor(data.colors[0].name);
+          }
+          if (data?.sizes?.length) {
+            const firstSize = typeof data.sizes[0] === 'string' ? data.sizes[0] : data.sizes[0].name;
+            setSelectedSize(firstSize);
+          }
+        }
+      } catch (err) {
+        if (mounted) {
+          setError('Ürün yüklenemedi');
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  const images = useMemo(() => {
+    if (!product) return [];
+    const gallery = product.gallery || [];
+    const candidates = [product.heroImage, product.image, ...gallery];
+    return candidates.filter(Boolean);
+  }, [product]);
+
+  const colorOptions = useMemo(() => {
+    if (!product?.colors) return [];
+    return product.colors.map(color => ({
+      name: color.name,
+      code: color.code,
+      available: color.available ?? true
+    }));
+  }, [product]);
+
+  const sizeOptions = useMemo(() => {
+    if (!product?.sizes) return [];
+    return product.sizes.map(size => typeof size === 'string'
+      ? { name: size, available: true }
+      : size
+    );
+  }, [product]);
+
+  useEffect(() => {
+    if (colorOptions.length && !selectedColor) {
+      setSelectedColor(colorOptions[0].name);
+    }
+  }, [colorOptions, selectedColor]);
+
+  useEffect(() => {
+    if (sizeOptions.length && !selectedSize) {
+      setSelectedSize(sizeOptions[0].name);
+    }
+  }, [sizeOptions, selectedSize]);
+
   const handleQuantityChange = (e) => {
-    const value = parseInt(e.target.value);
+    const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value > 0) {
       setQuantity(value);
     }
@@ -347,12 +385,33 @@ const ProductDetail = () => {
   };
   
   const addToCart = () => {
-    alert(`${quantity} adet ${selectedSize} beden ${selectedColor} renk ${mockProduct.title} sepete eklendi!`);
+    if (!product) return;
+    addItem(product, {
+      color: selectedColor,
+      size: selectedSize,
+      quantity
+    });
   };
   
   const addToWishlist = () => {
-    alert(`${mockProduct.title} favorilere eklendi!`);
+    if (!product) return;
+    alert(`${product.title} favorilere eklendi!`);
   };
+
+  const categoryLabel = useMemo(() => {
+    if (!product) return '';
+    const meta = categoryMeta[product.gender];
+    const sub = meta?.subcategories?.find(item => item.slug === product.category);
+    return sub ? `${meta.label} · ${sub.label}` : meta?.label || product.category;
+  }, [product]);
+
+  if (loading) {
+    return <p>Ürün yükleniyor...</p>;
+  }
+
+  if (error || !product) {
+    return <p>Ürün bulunamadı.</p>;
+  }
   
   return (
     <>
@@ -364,91 +423,114 @@ const ProductDetail = () => {
           <BreadcrumbItem>
             <Link to="/products">Ürünler</Link>
           </BreadcrumbItem>
-          <BreadcrumbItem>
-            <Link to={`/category/${mockProduct.category.toLowerCase()}`}>{mockProduct.category}</Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem>{mockProduct.title}</BreadcrumbItem>
+          {product.gender && (
+            <BreadcrumbItem>
+              <Link to={`/${product.gender}`}>
+                {categoryMeta[product.gender]?.label || product.gender}
+              </Link>
+            </BreadcrumbItem>
+          )}
+          {product.category && (
+            <BreadcrumbItem>
+              <Link to={`/${product.gender}/${product.category}`}>
+                {categoryMeta[product.gender]?.subcategories?.find(sub => sub.slug === product.category)?.label || product.category}
+              </Link>
+            </BreadcrumbItem>
+          )}
+          <BreadcrumbItem>{product.title}</BreadcrumbItem>
         </BreadcrumbList>
       </BreadcrumbNav>
       
       <ProductContainer>
         <ProductImages>
           <MainImage>
-            <img src={mockProduct.images[selectedImage]} alt={mockProduct.title} />
+            <img src={images[selectedImage]} alt={product.title} />
           </MainImage>
           <ThumbnailsContainer>
-            {mockProduct.images.map((image, index) => (
+            {images.map((image, index) => (
               <Thumbnail 
                 key={index} 
                 active={selectedImage === index}
                 onClick={() => setSelectedImage(index)}
               >
-                <img src={image} alt={`${mockProduct.title} - ${index + 1}`} />
+                <img src={image} alt={`${product.title} - ${index + 1}`} />
               </Thumbnail>
             ))}
           </ThumbnailsContainer>
         </ProductImages>
         
         <ProductInfo>
-          <ProductCategory>{mockProduct.category}</ProductCategory>
-          <ProductTitle>{mockProduct.title}</ProductTitle>
+          <ProductCategory>{categoryLabel}</ProductCategory>
+          <ProductTitle>{product.title}</ProductTitle>
           
           <ProductRating>
             {Array.from({ length: 5 }).map((_, index) => (
               <FiStar 
                 key={index}
-                fill={index < Math.floor(mockProduct.rating) ? 'currentColor' : 'none'}
+                fill={index < Math.floor(product.rating || 0) ? 'currentColor' : 'none'}
               />
             ))}
-            <span>{mockProduct.rating}</span>
-            <ReviewCount>({mockProduct.reviewCount} değerlendirme)</ReviewCount>
+            {product.rating && <span>{product.rating}</span>}
+            {product.reviewCount && (
+              <ReviewCount>({product.reviewCount} değerlendirme)</ReviewCount>
+            )}
           </ProductRating>
           
           <PriceContainer>
-            <Price>{mockProduct.price.toLocaleString('tr-TR')} ₺</Price>
-            {mockProduct.oldPrice && (
+            <Price>{product.price.toLocaleString('tr-TR')} ₺</Price>
+            {product.oldPrice && product.oldPrice > 0 && (
               <>
-                <OldPrice>{mockProduct.oldPrice.toLocaleString('tr-TR')} ₺</OldPrice>
-                <DiscountBadge>%{mockProduct.discount} İndirim</DiscountBadge>
+                <OldPrice>{product.oldPrice.toLocaleString('tr-TR')} ₺</OldPrice>
+                {product.discount && (
+                  <DiscountBadge>%{product.discount} İndirim</DiscountBadge>
+                )}
               </>
             )}
           </PriceContainer>
           
-          <ProductDescription>{mockProduct.description}</ProductDescription>
+          <ProductDescription>{product.description}</ProductDescription>
           
           <Divider />
           
-          <OptionLabel>Renk: {selectedColor}</OptionLabel>
-          <ColorOptions>
-            {mockProduct.colors.map(color => (
-              <ColorOption 
-                key={color.name}
-                color={color.code}
-                selected={selectedColor === color.name}
-                onClick={() => color.available && setSelectedColor(color.name)}
-                style={{ 
-                  opacity: color.available ? 1 : 0.5,
-                  cursor: color.available ? 'pointer' : 'not-allowed',
-                  border: color.code === '#FFFFFF' ? '1px solid #ddd' : undefined
-                }}
-                title={color.name}
-              />
-            ))}
-          </ColorOptions>
+          {colorOptions.length > 0 && (
+            <>
+              <OptionLabel>Renk: {selectedColor}</OptionLabel>
+              <ColorOptions>
+                {colorOptions.map(color => (
+                  <ColorOption 
+                    key={color.name}
+                    color={color.code}
+                    selected={selectedColor === color.name}
+                    onClick={() => color.available && setSelectedColor(color.name)}
+                    style={{ 
+                      opacity: color.available ? 1 : 0.5,
+                      cursor: color.available ? 'pointer' : 'not-allowed',
+                      border: color.code === '#FFFFFF' ? '1px solid #ddd' : undefined
+                    }}
+                    title={color.name}
+                  />
+                ))}
+              </ColorOptions>
+            </>
+          )}
           
-          <OptionLabel>Beden: {selectedSize}</OptionLabel>
-          <SizeOptions>
-            {mockProduct.sizes.map(size => (
-              <SizeOption 
-                key={size.name}
-                selected={selectedSize === size.name}
-                disabled={!size.available}
-                onClick={() => size.available && setSelectedSize(size.name)}
-              >
-                {size.name}
-              </SizeOption>
-            ))}
-          </SizeOptions>
+          {sizeOptions.length > 0 && (
+            <>
+              <OptionLabel>Beden: {selectedSize}</OptionLabel>
+              <SizeOptions>
+                {sizeOptions.map(size => (
+                  <SizeOption 
+                    key={size.name}
+                    selected={selectedSize === size.name}
+                    disabled={!size.available}
+                    onClick={() => size.available && setSelectedSize(size.name)}
+                  >
+                    {size.name}
+                  </SizeOption>
+                ))}
+              </SizeOptions>
+            </>
+          )}
           
           <OptionLabel>Adet</OptionLabel>
           <QuantitySelector>
@@ -493,9 +575,11 @@ const ProductDetail = () => {
           </ActionButtons>
           
           <ProductMeta>
-            <p>SKU: <span>{mockProduct.sku}</span></p>
-            <p>Kategori: <span>{mockProduct.category}</span></p>
-            <p>Etiketler: <span>{mockProduct.tags.join(', ')}</span></p>
+            {product.sku && <p>SKU: <span>{product.sku}</span></p>}
+            <p>Kategori: <span>{categoryLabel}</span></p>
+            {product.tags?.length && (
+              <p>Etiketler: <span>{product.tags.join(', ')}</span></p>
+            )}
           </ProductMeta>
         </ProductInfo>
       </ProductContainer>

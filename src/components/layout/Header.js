@@ -1,14 +1,46 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link, useLocation } from 'react-router-dom';
-import { FiShoppingCart, FiHeart, FiUser, FiSearch, FiMenu, FiX } from 'react-icons/fi';
+import { FiShoppingCart, FiHeart, FiUser, FiSearch, FiMenu, FiX, FiChevronDown } from 'react-icons/fi';
+import Button from '../common/Button';
+import categoryMeta from '../../constants/categoryMeta';
+import { useCart } from '../../contexts/CartContext';
 
 const HeaderContainer = styled.header`
-  background-color: ${props => props.theme.colors.background};
+  background: ${props => props.theme.colors.surface};
   box-shadow: ${props => props.theme.shadows.sm};
   position: sticky;
   top: 0;
   z-index: 100;
+`;
+
+const NavTrigger = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.text.primary};
+  font-weight: ${props => props.theme.typography.fontWeight.medium};
+  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+  border-radius: ${props => props.theme.borderRadius.sm};
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+  font-size: ${props => props.theme.typography.fontSize.sm};
+  transition: all 0.2s ease;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    color: ${props => props.theme.colors.primary};
+    background-color: ${props => props.theme.colors.background};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    width: 100%;
+    justify-content: space-between;
+    font-size: ${props => props.theme.typography.fontSize.lg};
+    padding: ${props => props.theme.spacing.sm} 0;
+  }
 `;
 
 const HeaderContent = styled.div`
@@ -38,6 +70,7 @@ const Logo = styled(Link)`
 
 const Navigation = styled.nav`
   display: flex;
+  gap: ${props => props.theme.spacing.md};
   
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     display: ${props => props.isOpen ? 'flex' : 'none'};
@@ -58,6 +91,7 @@ const NavList = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
+  gap: ${props => props.theme.spacing.lg};
   
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     flex-direction: column;
@@ -66,8 +100,7 @@ const NavList = styled.ul`
 `;
 
 const NavItem = styled.li`
-  margin: 0 ${props => props.theme.spacing.md};
-  
+  position: relative;
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     margin: ${props => props.theme.spacing.md} 0;
   }
@@ -87,7 +120,7 @@ const NavLink = styled(Link)`
   
   &:hover {
     color: ${props => props.theme.colors.primary};
-    background-color: ${props => props.theme.colors.primary}11;
+    background-color: ${props => props.theme.colors.background};
   }
   
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
@@ -100,6 +133,7 @@ const NavLink = styled(Link)`
 const Actions = styled.div`
   display: flex;
   align-items: center;
+  gap: ${props => props.theme.spacing.sm};
 `;
 
 const IconButton = styled.button`
@@ -160,28 +194,118 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
+const MegaMenu = styled.div`
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 520px;
+  background: ${props => props.theme.colors.surface};
+  box-shadow: ${props => props.theme.shadows.lg};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: ${props => props.theme.spacing.lg};
+  display: ${props => (props.open ? 'block' : 'none')};
+  animation: fadeIn 0.2s ease;
+  border: 1px solid ${props => props.theme.colors.muted};
+  z-index: 150;
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+    padding: ${props => props.theme.spacing.md} 0;
+  }
+`;
+
+const MegaMenuGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: ${props => props.theme.spacing.md};
+
+  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MegaMenuCard = styled(Link)`
+  border: 1px solid ${props => props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: ${props => props.theme.spacing.md};
+  text-decoration: none;
+  color: ${props => props.theme.colors.text.primary};
+  transition: transform 0.2s ease, border-color 0.2s ease;
+
+  h4 {
+    margin-bottom: ${props => props.theme.spacing.xs};
+    font-size: ${props => props.theme.typography.fontSize.md};
+  }
+
+  p {
+    margin: 0;
+    color: ${props => props.theme.colors.text.secondary};
+    font-size: ${props => props.theme.typography.fontSize.sm};
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const NavLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+`;
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeMega, setActiveMega] = useState(null);
   const location = useLocation();
+  const { summary } = useCart();
   
-  const cartItemsCount = 0; // Bu değer sepet context'inden gelecek
+  const cartItemsCount = summary.itemCount;
   
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-  
+  const toggleMenu = () => setIsMenuOpen(prev => !prev);
   const closeMenu = () => {
     setIsMenuOpen(false);
+    setActiveMega(null);
   };
-  
-  const isActive = (path) => {
-    return location.pathname === path;
+
+  const handleMegaToggle = (gender) => {
+    setActiveMega(prev => (prev === gender ? null : gender));
+  };
+
+  const isActive = (path) => location.pathname === path;
+
+  const renderMegaMenu = (gender) => {
+    const meta = categoryMeta[gender];
+    if (!meta) return null;
+
+    return (
+      <MegaMenu open={activeMega === gender}>
+        <h3 style={{ marginTop: 0, marginBottom: '0.75rem' }}>{meta.hero.title}</h3>
+        <p style={{ color: '#5F6368', marginBottom: '1.25rem' }}>{meta.hero.subtitle}</p>
+        <MegaMenuGrid>
+          {meta.subcategories.map((sub) => (
+            <MegaMenuCard
+              key={sub.slug}
+              to={`/${gender}/${sub.slug}`}
+              onClick={closeMenu}
+            >
+              <h4>{sub.label}</h4>
+              <p>{sub.description}</p>
+            </MegaMenuCard>
+          ))}
+        </MegaMenuGrid>
+      </MegaMenu>
+    );
   };
   
   return (
     <HeaderContainer>
       <HeaderContent>
-        <Logo to="/">TeeVogue</Logo>
+        <Logo to="/">Becca Giyim</Logo>
         
         <MobileMenuButton onClick={toggleMenu}>
           <FiMenu />
@@ -200,16 +324,20 @@ const Header = () => {
                 Ana Sayfa
               </NavLink>
             </NavItem>
-            <NavItem>
-              <NavLink to="/products" active={isActive('/products')} onClick={closeMenu}>
-                Ürünler
-              </NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink to="/categories" active={isActive('/categories')} onClick={closeMenu}>
-                Kategoriler
-              </NavLink>
-            </NavItem>
+            {['kadin', 'erkek'].map((gender) => (
+              <NavItem key={gender}>
+                <NavTrigger
+                  onClick={() => handleMegaToggle(gender)}
+                  aria-expanded={activeMega === gender}
+                >
+                  <NavLabel>
+                    {categoryMeta[gender].label}
+                    <FiChevronDown />
+                  </NavLabel>
+                </NavTrigger>
+                {renderMegaMenu(gender)}
+              </NavItem>
+            ))}
             <NavItem>
               <NavLink to="/about" active={isActive('/about')} onClick={closeMenu}>
                 Hakkımızda
@@ -230,13 +358,20 @@ const Header = () => {
           <IconButton aria-label="Favoriler">
             <FiHeart />
           </IconButton>
-          <IconButton aria-label="Sepet">
+          <IconButton as={Link} to="/cart" aria-label="Sepet">
             <FiShoppingCart />
             {cartItemsCount > 0 && <Badge>{cartItemsCount}</Badge>}
           </IconButton>
           <IconButton aria-label="Hesabım">
             <FiUser />
           </IconButton>
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={() => closeMenu()}
+          >
+            Kampanyalar
+          </Button>
         </Actions>
       </HeaderContent>
     </HeaderContainer>
