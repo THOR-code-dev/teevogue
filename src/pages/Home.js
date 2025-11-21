@@ -5,7 +5,7 @@ import { FiArrowRight } from 'react-icons/fi';
 import ProductCard from '../components/product/ProductCard';
 import Button from '../components/common/Button';
 import categoryMeta from '../constants/categoryMeta';
-import products from '../data/products';
+import useProducts from '../hooks/useProducts';
 
 // Styled Components
 const HeroSection = styled.section`
@@ -310,69 +310,67 @@ const NewsletterButton = styled.button`
   }
 `;
 
-// Örnek ürün verileri
-const featuredProducts = products.slice(0, 4);
-
-const categories = [
-  {
-    id: 'kadin',
-    name: 'Kadın Koleksiyonu',
-    tagline: 'Takım, dış giyim ve üst giyim kapsülleri',
-    image: categoryMeta.kadin.hero.image,
-    to: '/kadin'
-  },
-  {
-    id: 'erkek',
-    name: 'Erkek Koleksiyonu',
-    tagline: 'Şehir silüetinden ilham alan parçalar',
-    image: categoryMeta.erkek.hero.image,
-    to: '/erkek'
-  },
-  {
-    id: 'kadin-takim',
-    name: 'Kadın Takım',
-    tagline: 'Ofisten akşam davetine',
-    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80',
-    to: '/kadin/takim'
-  },
-  {
-    id: 'erkek-dis',
-    name: 'Erkek Dış Giyim',
-    tagline: 'Teknik kaban ve ceketler',
-    image: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
-    to: '/erkek/dis-giyim'
-  }
-];
-
-// Örnek müşteri yorumları
-const testimonials = [
-  {
-    id: 1,
-    text: 'TeeVogue\'dan aldığım t-shirtler hem kaliteli hem de çok şık. Baskılar uzun süre dayanıyor ve kumaşı çok rahat.',
-    name: 'Ayşe Yılmaz',
-    title: 'Müşteri',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
-  },
-  {
-    id: 2,
-    text: 'Siparişim çok hızlı geldi ve ürünler tam beklediğim gibiydi. Kesinlikle tekrar alışveriş yapacağım.',
-    name: 'Mehmet Kaya',
-    title: 'Müşteri',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-  },
-  {
-    id: 3,
-    text: 'Özel tasarım t-shirtler için en iyi adres. Fiyat-performans açısından çok memnun kaldım.',
-    name: 'Zeynep Demir',
-    title: 'Müşteri',
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg'
-  }
-];
-
 const Home = () => {
+  const { products: allProducts, loading } = useProducts();
+  const featuredProducts = allProducts.slice(0, 4);
+
+  const categories = [
+    {
+      id: 'kadin',
+      name: 'Kadın Koleksiyonu',
+      tagline: 'Takım, dış giyim ve üst giyim kapsülleri',
+      image: categoryMeta.kadin.hero.image,
+      to: '/kadin'
+    },
+    {
+      id: 'erkek',
+      name: 'Erkek Koleksiyonu',
+      tagline: 'Şehir silüetinden ilham alan parçalar',
+      image: categoryMeta.erkek.hero.image,
+      to: '/erkek'
+    },
+    {
+      id: 'kadin-takim',
+      name: 'Kadın Takım',
+      tagline: 'Ofisten akşam davetine',
+      image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80',
+      to: '/kadin/takim'
+    },
+    {
+      id: 'erkek-dis',
+      name: 'Erkek Dış Giyim',
+      tagline: 'Teknik kaban ve ceketler',
+      image: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
+      to: '/erkek/dis-giyim'
+    }
+  ];
+
+  const testimonials = [
+    {
+      id: 1,
+      text: 'Becca Giyim\'den aldığım ürünler hem kaliteli hem de çok şık. Kesinlikle tekrar alışveriş yapacağım.',
+      name: 'Ayşe Yılmaz',
+      title: 'Müşteri',
+      avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+    },
+    {
+      id: 2,
+      text: 'Siparişim çok hızlı geldi ve ürünler tam beklediğim gibiydi. Kesinlikle tekrar alışveriş yapacağım.',
+      name: 'Mehmet Kaya',
+      title: 'Müşteri',
+      avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+    },
+    {
+      id: 3,
+      text: 'Özel tasarım ürünler için en iyi adres. Fiyat-performans açısından çok memnun kaldım.',
+      name: 'Zeynep Demir',
+      title: 'Müşteri',
+      avatar: 'https://randomuser.me/api/portraits/women/68.jpg'
+    }
+  ];
+
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
-    // Bülten aboneliği işleme
     alert('Bülten aboneliğiniz alındı!');
   };
   
@@ -383,7 +381,7 @@ const Home = () => {
         <HeroContent>
           <HeroTitle>Tarzını Yansıt</HeroTitle>
           <HeroSubtitle>
-            Özel tasarım t-shirtler ile kendi tarzını oluştur. Kaliteli kumaş ve baskılarla uzun ömürlü kullanım.
+            Becca Giyim ile şıklığı yeniden keşfet. Kaliteli kumaşlar ve modern tasarımlarla gardırobunuzu güncelleyin.
           </HeroSubtitle>
           <Button 
             variant="primary" 
@@ -398,7 +396,7 @@ const Home = () => {
         <HeroImage>
           <img 
             src="https://images.unsplash.com/photo-1562157873-818bc0726f68?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-            alt="TeeVogue T-shirts" 
+            alt="Becca Giyim Koleksiyonu" 
           />
         </HeroImage>
       </HeroSection>
@@ -412,9 +410,15 @@ const Home = () => {
           </ViewAllLink>
         </SectionHeader>
         <ProductGrid>
-          {featuredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {loading ? (
+            <p>Yükleniyor...</p>
+          ) : featuredProducts.length > 0 ? (
+            featuredProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          ) : (
+            <p>Henüz ürün eklenmemiş.</p>
+          )}
         </ProductGrid>
       </section>
       
@@ -440,10 +444,10 @@ const Home = () => {
         <AboutContent>
           <SectionTitle>Hakkımızda</SectionTitle>
           <p>
-            TeeVogue, 2023 yılında özel tasarım t-shirtler üretmek amacıyla kuruldu. Amacımız, müşterilerimize hem kaliteli hem de özgün tasarımlara sahip ürünler sunmak.
+            Becca Giyim, modern ve şık tasarımlarıyla kadın ve erkek modasına yön vermek amacıyla kuruldu. Amacımız, müşterilerimize hem kaliteli hem de özgün parçalar sunmak.
           </p>
           <p>
-            Tüm ürünlerimiz %100 pamuklu kumaştan üretilmekte ve çevre dostu baskı teknikleri kullanılmaktadır. Sürdürülebilirlik ve etik üretim değerlerimizin merkezinde yer alır.
+            Tüm ürünlerimiz seçkin kumaşlardan üretilmekte ve sürdürülebilir üretim ilkelerine uyulmaktadır. Kalite ve tarz, değerlerimizin merkezinde yer alır.
           </p>
           <Button 
             variant="outline" 

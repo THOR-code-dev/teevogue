@@ -43,7 +43,7 @@ const seedProductsIfEmpty = async () => {
 };
 
 export const getProducts = async () => {
-  await seedProductsIfEmpty();
+  // await seedProductsIfEmpty(); // Seed disabled to avoid mock data
   const { data, error } = await supabase
     .from('products')
     .select('*')
